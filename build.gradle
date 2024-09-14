@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '2.11.2'
+}
+
+group 'com.vitronic'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.17.0' //to work with selenium
+    implementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.10.1' //to work with junit
+    testImplementation group: 'io.qameta.allure', name: 'allure-junit5', version: '2.25.0' //to work with allure
+    implementation group: 'commons-io', name: 'commons-io', version: '2.15.1' //to work with xml
+    implementation group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '11.2.3.jre17' //to work with database
+    implementation 'io.qameta.allure:allure-java-commons:2.25.0' //to work with @step annotation in allure
+    testImplementation group: 'io.rest-assured', name: 'rest-assured', version: '5.5.0'//rest assured
+
+}
+
+test {
+    systemProperty "environment", System.getProperty("environment", "SA")//read the env from gradle execution command, if not passed, default SA3367 is used
+    //Commented the above line as env has to be automatically selected based on project domain name identified
+    useJUnitPlatform {
+        def tags = System.getProperty("tags", "SampleTest") //read the tag from gradle execution command, if not passed, default Regression is used
+        includeTags tags.split(',')
+        def xtags = System.getProperty("xtags", "SkipTest") //read the tag to exclude tests from gradle execution command, if not passed, default SkipTest is used
+        excludeTags xtags
+    }
+}

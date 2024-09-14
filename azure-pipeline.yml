@@ -1,0 +1,39 @@
+trigger:
+  - master  # Modify this based on your branch configuration
+
+pool:
+  name: Automation
+
+steps:
+  - powershell: |
+      # Find and kill Java processes if they exist
+      $javaProcesses = Get-Process -Name java -ErrorAction SilentlyContinue
+      if ($javaProcesses) {
+          $javaProcesses | ForEach-Object { Stop-Process -Id $_.Id -Force }
+      }
+    displayName: 'Kill Java Processes'
+
+  - task: JavaToolInstaller@0
+    inputs:
+      versionSpec: '17.0.10'
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: LocalDirectory
+      jdkFile: 'C:\\Program Files\\Java\\jdk-17.zip'
+      jdkDestinationDirectory: "$(Agent.ToolsDirectory)"
+      cleanDestinationDirectory: true
+
+  - task: Gradle@2
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      options: "clean test --continue allureReport"
+      publishJUnitResults: true
+      testResultsFiles: '**/TEST-*.xml'
+      continueOnError: true
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.SourcesDirectory)\\build\\reports\\allure-report\\allureReport'
+      artifactName: 'allure-report'
+      publishLocation: 'Container'
+    condition: succeededOrFailed()
